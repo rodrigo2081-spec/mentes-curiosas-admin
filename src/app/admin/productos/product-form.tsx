@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { MediaUploader, type MediaItem } from "@/components/media-uploader";
+import { formatPrice } from "@/lib/utils";
+import { CASH_DISCOUNT_RATE } from "@/lib/pricing";
 import type { ProductFormState } from "./actions";
 
 type Category = { id: string; name: string };
@@ -9,7 +11,10 @@ type Category = { id: string; name: string };
 export type ProductFormValues = {
   name: string;
   description: string;
-  price: string;
+  costProduct: string;
+  costShipping: string;
+  costAdditional: string;
+  priceList: string;
   stock: number;
   categoryId: string | null;
   isActive: boolean;
@@ -28,6 +33,15 @@ export function ProductForm({
   submitLabel: string;
 }) {
   const [state, formAction, pending] = useActionState<ProductFormState, FormData>(action, {});
+
+  const [costProduct, setCostProduct] = useState(initialValues?.costProduct ?? "0");
+  const [costShipping, setCostShipping] = useState(initialValues?.costShipping ?? "0");
+  const [costAdditional, setCostAdditional] = useState(initialValues?.costAdditional ?? "0");
+  const [priceList, setPriceList] = useState(initialValues?.priceList ?? "0");
+
+  const totalCost =
+    (parseFloat(costProduct) || 0) + (parseFloat(costShipping) || 0) + (parseFloat(costAdditional) || 0);
+  const priceCash = (parseFloat(priceList) || 0) * (1 - CASH_DISCOUNT_RATE);
 
   return (
     <form action={formAction} className="max-w-2xl space-y-6">
@@ -57,21 +71,80 @@ export function ProductForm({
         />
       </div>
 
+      <div className="rounded-lg border border-neutral-200 p-4">
+        <p className="mb-3 text-sm font-medium text-neutral-700">Costos</p>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="costProduct" className="block text-xs text-neutral-500">
+              Costo del producto
+            </label>
+            <input
+              id="costProduct"
+              name="costProduct"
+              type="number"
+              step="0.01"
+              min={0}
+              value={costProduct}
+              onChange={(e) => setCostProduct(e.target.value)}
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="costShipping" className="block text-xs text-neutral-500">
+              Flete
+            </label>
+            <input
+              id="costShipping"
+              name="costShipping"
+              type="number"
+              step="0.01"
+              min={0}
+              value={costShipping}
+              onChange={(e) => setCostShipping(e.target.value)}
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="costAdditional" className="block text-xs text-neutral-500">
+              Costo adicional
+            </label>
+            <input
+              id="costAdditional"
+              name="costAdditional"
+              type="number"
+              step="0.01"
+              min={0}
+              value={costAdditional}
+              onChange={(e) => setCostAdditional(e.target.value)}
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-neutral-600">
+          Costo total: <span className="font-medium text-neutral-900">{formatPrice(totalCost)}</span>
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="price" className="block text-sm font-medium text-neutral-700">
-            Precio
+          <label htmlFor="priceList" className="block text-sm font-medium text-neutral-700">
+            Precio de Venta Lista
           </label>
           <input
-            id="price"
-            name="price"
+            id="priceList"
+            name="priceList"
             type="number"
             step="0.01"
             min={0}
             required
-            defaultValue={initialValues?.price}
+            value={priceList}
+            onChange={(e) => setPriceList(e.target.value)}
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
           />
+          <p className="mt-1 text-xs text-neutral-500">
+            Precio de Contado (5% off, efectivo/transferencia):{" "}
+            <span className="font-medium text-neutral-700">{formatPrice(priceCash)}</span>
+          </p>
         </div>
         <div>
           <label htmlFor="stock" className="block text-sm font-medium text-neutral-700">

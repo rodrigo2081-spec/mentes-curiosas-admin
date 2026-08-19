@@ -37,7 +37,10 @@ export default async function EditarProductoPage(
         initialValues={{
           name: product.name,
           description: product.description,
-          price: product.price,
+          costProduct: product.costProduct,
+          costShipping: product.costShipping,
+          costAdditional: product.costAdditional,
+          priceList: product.priceList,
           stock: product.stock,
           categoryId: product.categoryId,
           isActive: product.isActive,

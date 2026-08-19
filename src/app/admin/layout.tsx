@@ -6,6 +6,8 @@ const navItems = [
   { href: "/admin", label: "Panel" },
   { href: "/admin/productos", label: "Productos" },
   { href: "/admin/categorias", label: "Categorías" },
+  { href: "/admin/ventas", label: "Ventas" },
+  { href: "/admin/administracion", label: "Administración" },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {

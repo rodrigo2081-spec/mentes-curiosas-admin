@@ -13,6 +13,18 @@ import { relations } from "drizzle-orm";
 
 export const mediaTypeEnum = pgEnum("media_type", ["image", "video"]);
 
+// Método de pago elegido en una venta. Cada uno mapea a una caja fija:
+// efectivo -> Efectivo, transferencia_flor / tarjeta -> Banco Flor, transferencia_rodrigo -> Banco Rodrigo.
+export const paymentMethodEnum = pgEnum("payment_method", [
+  "efectivo",
+  "transferencia_flor",
+  "transferencia_rodrigo",
+  "tarjeta",
+]);
+
+// Las tres cajas del negocio.
+export const cashBoxEnum = pgEnum("cash_box", ["efectivo", "banco_flor", "banco_rodrigo"]);
+
 export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 120 }).notNull(),
@@ -33,7 +45,14 @@ export const products = pgTable("products", {
   name: varchar("name", { length: 200 }).notNull(),
   slug: varchar("slug", { length: 220 }).notNull().unique(),
   description: text("description").default("").notNull(),
-  price: numeric("price", { precision: 12, scale: 2 }).notNull().default("0"),
+  // Costos que arman el costo total del producto.
+  costProduct: numeric("cost_product", { precision: 12, scale: 2 }).notNull().default("0"),
+  costShipping: numeric("cost_shipping", { precision: 12, scale: 2 }).notNull().default("0"),
+  costAdditional: numeric("cost_additional", { precision: 12, scale: 2 }).notNull().default("0"),
+  // Precio de venta "de lista". El precio de contado (5% off) se calcula a partir de este.
+  // Nota: la columna en la base sigue llamándose "price" (columna original) para que la
+  // migración sea un ALTER simple en vez de un rename ambiguo.
+  priceList: numeric("price", { precision: 12, scale: 2 }).notNull().default("0"),
   stock: integer("stock").notNull().default(0),
   categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
   // Controls whether the product is visible in the future online store.
@@ -53,12 +72,72 @@ export const productMedia = pgTable("product_media", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const sales = pgTable("sales", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerName: varchar("customer_name", { length: 200 }).notNull(),
+  customerPhone: varchar("customer_phone", { length: 60 }).notNull(),
+  customerEmail: varchar("customer_email", { length: 255 }),
+  customerAddress: text("customer_address"),
+  paymentMethod: paymentMethodEnum("payment_method").notNull(),
+  // Derivada automáticamente del método de pago al crear la venta.
+  cashBox: cashBoxEnum("cash_box").notNull(),
+  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  note: text("note"),
+  date: timestamp("date", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const saleItems = pgTable("sale_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  saleId: uuid("sale_id")
+    .notNull()
+    .references(() => sales.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+  // Se guarda una copia del nombre por si el producto se edita o borra después.
+  productName: varchar("product_name", { length: 200 }).notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  // Precio y costo unitarios aplicados en el momento de la venta (foto histórica).
+  unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull().default("0"),
+  unitCost: numeric("unit_cost", { precision: 12, scale: 2 }).notNull().default("0"),
+});
+
+export const expenses = pgTable("expenses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  description: varchar("description", { length: 255 }).notNull(),
+  category: varchar("category", { length: 120 }),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  cashBox: cashBoxEnum("cash_box").notNull(),
+  date: timestamp("date", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const profitWithdrawals = pgTable("profit_withdrawals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  partner: varchar("partner", { length: 120 }).notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  cashBox: cashBoxEnum("cash_box").notNull(),
+  note: text("note"),
+  date: timestamp("date", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const cashTransfers = pgTable("cash_transfers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  fromCashBox: cashBoxEnum("from_cash_box").notNull(),
+  toCashBox: cashBoxEnum("to_cash_box").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  note: text("note"),
+  date: timestamp("date", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, {
     fields: [products.categoryId],
     references: [categories.id],
   }),
   media: many(productMedia),
+  saleItems: many(saleItems),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -68,6 +147,21 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
 export const productMediaRelations = relations(productMedia, ({ one }) => ({
   product: one(products, {
     fields: [productMedia.productId],
+    references: [products.id],
+  }),
+}));
+
+export const salesRelations = relations(sales, ({ many }) => ({
+  items: many(saleItems),
+}));
+
+export const saleItemsRelations = relations(saleItems, ({ one }) => ({
+  sale: one(sales, {
+    fields: [saleItems.saleId],
+    references: [sales.id],
+  }),
+  product: one(products, {
+    fields: [saleItems.productId],
     references: [products.id],
   }),
 }));

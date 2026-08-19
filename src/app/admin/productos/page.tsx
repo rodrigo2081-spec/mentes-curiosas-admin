@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { formatPrice } from "@/lib/utils";
+import { priceCash, totalCost } from "@/lib/pricing";
 import { deleteProduct } from "./actions";
 import { StockQuickEdit } from "./stock-quick-edit";
 import { ActiveToggle } from "./active-toggle";
@@ -40,7 +41,8 @@ export default async function ProductosPage() {
               <tr>
                 <th className="px-4 py-3 font-medium">Producto</th>
                 <th className="px-4 py-3 font-medium">Categoría</th>
-                <th className="px-4 py-3 font-medium">Precio</th>
+                <th className="px-4 py-3 font-medium">Costo</th>
+                <th className="px-4 py-3 font-medium">Lista / Contado</th>
                 <th className="px-4 py-3 font-medium">Stock</th>
                 <th className="px-4 py-3 font-medium">Tienda</th>
                 <th className="px-4 py-3 font-medium"></th>
@@ -72,7 +74,13 @@ export default async function ProductosPage() {
                   <td className="px-4 py-3 text-neutral-600">
                     {product.category?.name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-neutral-600">{formatPrice(product.price)}</td>
+                  <td className="px-4 py-3 text-neutral-600">{formatPrice(totalCost(product))}</td>
+                  <td className="px-4 py-3 text-neutral-600">
+                    {formatPrice(product.priceList)}
+                    <span className="block text-xs text-neutral-400">
+                      {formatPrice(priceCash(product.priceList))} contado
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <StockQuickEdit id={product.id} stock={product.stock} />
                   </td>
