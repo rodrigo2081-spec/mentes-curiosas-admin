@@ -1,0 +1,49 @@
+import { notFound } from "next/navigation";
+import { db } from "@/db";
+import { ProductForm } from "../product-form";
+import { updateProduct } from "../actions";
+
+export const dynamic = "force-dynamic";
+
+export default async function EditarProductoPage(
+  props: PageProps<"/admin/productos/[id]">
+) {
+  const { id } = await props.params;
+
+  const [product, categories] = await Promise.all([
+    db.query.products.findFirst({
+      where: (products, { eq }) => eq(products.id, id),
+      with: { media: { orderBy: (media, { asc }) => [asc(media.position)] } },
+    }),
+    db.query.categories.findMany({
+      orderBy: (categories, { asc }) => [asc(categories.name)],
+    }),
+  ]);
+
+  if (!product) notFound();
+
+  const updateWithId = updateProduct.bind(null, id);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-neutral-900">Editar producto</h1>
+        <p className="text-sm text-neutral-500">{product.name}</p>
+      </div>
+      <ProductForm
+        action={updateWithId}
+        categories={categories}
+        submitLabel="Guardar cambios"
+        initialValues={{
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          stock: product.stock,
+          categoryId: product.categoryId,
+          isActive: product.isActive,
+          media: product.media.map((m) => ({ type: m.type, url: m.url })),
+        }}
+      />
+    </div>
+  );
+}
