@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
+import * as schema from "../src/db/schema";
 import { admins } from "../src/db/schema";
 
 async function main() {
@@ -17,7 +18,7 @@ async function main() {
     ssl: connectionString.includes("localhost") ? false : "require",
     max: 1,
   });
-  const db = drizzle(client);
+  const db = drizzle(client, { schema });
 
   console.log("Aplicando migraciones...");
   await migrate(db, { migrationsFolder: "./drizzle" });
