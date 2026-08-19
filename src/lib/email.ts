@@ -70,7 +70,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function customerEmailHtml(sale: SaleNotificationData): string {
+export function customerEmailHtml(sale: SaleNotificationData): string {
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;color:#171717;max-width:520px;margin:0 auto;">
       <h2 style="margin-bottom:4px;">¡Gracias por tu compra, ${escapeHtml(sale.customerName)}!</h2>
@@ -93,7 +93,7 @@ function customerEmailHtml(sale: SaleNotificationData): string {
   `;
 }
 
-function adminEmailHtml(sale: SaleNotificationData): string {
+export function adminEmailHtml(sale: SaleNotificationData): string {
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;color:#171717;max-width:520px;margin:0 auto;">
       <h2 style="margin-bottom:4px;">Nueva venta registrada</h2>
