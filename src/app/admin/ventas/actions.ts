@@ -14,6 +14,7 @@ import {
   totalCost,
   type PaymentMethod,
 } from "@/lib/pricing";
+import { sendSaleNotifications } from "@/lib/email";
 
 async function requireAdmin() {
   const session = await auth();
@@ -105,7 +106,7 @@ export async function createSale(
 
   const totalAmount = items.reduce((sum, it) => sum + it.subtotal, 0);
 
-  await db.transaction(async (tx) => {
+  const saleId = await db.transaction(async (tx) => {
     const [sale] = await tx
       .insert(sales)
       .values({
@@ -137,6 +138,26 @@ export async function createSale(
         .set({ stock: sql`${products.stock} - ${item.quantity}` })
         .where(eq(products.id, item.productId));
     }
+
+    return sale.id;
+  });
+
+  // El envío de emails nunca debe bloquear ni hacer fallar la venta ya
+  // confirmada: sendSaleNotifications atrapa sus propios errores.
+  await sendSaleNotifications({
+    id: saleId,
+    customerName: parsed.data.customerName,
+    customerPhone: parsed.data.customerPhone,
+    customerEmail: parsed.data.customerEmail || null,
+    customerAddress: parsed.data.customerAddress || null,
+    paymentMethod: parsed.data.paymentMethod,
+    totalAmount,
+    note: parsed.data.note || null,
+    items: items.map((it) => ({
+      productName: it.productName,
+      quantity: it.quantity,
+      unitPrice: it.unitPrice,
+    })),
   });
 
   revalidatePath("/admin/ventas");
