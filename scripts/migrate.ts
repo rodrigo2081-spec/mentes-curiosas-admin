@@ -24,15 +24,19 @@ async function main() {
   await migrate(db, { migrationsFolder: "./drizzle" });
   console.log("Migraciones aplicadas correctamente.");
 
-  // Si están definidas ADMIN_EMAIL y ADMIN_PASSWORD, aseguramos que exista
-  // (o actualizamos) ese usuario admin. Es idempotente: corre en cada build
-  // sin romper nada si el usuario ya existe.
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
-  if (email && password) {
+  // Por cada admin definido por variables de entorno (ADMIN_EMAIL/ADMIN_PASSWORD,
+  // ADMIN2_EMAIL/ADMIN2_PASSWORD, ADMIN3_..., etc.) nos aseguramos de que exista
+  // ese usuario. Es idempotente: corre en cada build sin romper nada si el
+  // usuario ya existe (no pisa la contraseña de un admin ya creado).
+  const suffixes = ["", "2", "3", "4", "5"];
+  for (const suffix of suffixes) {
+    const email = process.env[`ADMIN${suffix}_EMAIL`];
+    const password = process.env[`ADMIN${suffix}_PASSWORD`];
+    if (!email || !password) continue;
+
     const normalizedEmail = email.toLowerCase().trim();
     const passwordHash = await bcrypt.hash(password, 10);
-    const name = process.env.ADMIN_NAME || "Admin";
+    const name = process.env[`ADMIN${suffix}_NAME`] || "Admin";
 
     const existing = await db.query.admins.findFirst({
       where: eq(admins.email, normalizedEmail),
@@ -44,8 +48,6 @@ async function main() {
       await db.insert(admins).values({ email: normalizedEmail, passwordHash, name });
       console.log(`Usuario admin creado: ${normalizedEmail}`);
     }
-  } else {
-    console.log("ADMIN_EMAIL/ADMIN_PASSWORD no definidas: se omite la creación del admin.");
   }
 
   await client.end();
