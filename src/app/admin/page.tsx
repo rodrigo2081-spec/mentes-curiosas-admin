@@ -29,6 +29,7 @@ export default async function AdminDashboardPage() {
   ]);
 
   const totalProducts = allProducts.length;
+  const totalUnitsInStock = allProducts.reduce((sum, p) => sum + p.stock, 0);
   const lowStock = allProducts.filter((p) => p.stock <= LOW_STOCK_THRESHOLD && p.stock > 0);
   const outOfStock = allProducts.filter((p) => p.stock === 0);
 
@@ -62,6 +63,10 @@ export default async function AdminDashboardPage() {
           <p className="text-2xl font-semibold text-neutral-900">{totalProducts}</p>
           <p className="text-sm text-neutral-500">Productos totales</p>
           <div className="mt-3 space-y-0.5 border-t border-neutral-100 pt-2 text-xs text-neutral-500">
+            <p>
+              Unidades en stock:{" "}
+              <span className="font-medium text-neutral-700">{totalUnitsInStock}</span>
+            </p>
             <p>
               Costo: <span className="font-medium text-neutral-700">{formatPrice(inventoryCost)}</span>
             </p>
