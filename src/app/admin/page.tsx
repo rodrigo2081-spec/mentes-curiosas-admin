@@ -8,8 +8,6 @@ import { getDollarRate } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
-const LOW_STOCK_THRESHOLD = 5;
-
 export default async function AdminDashboardPage() {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -30,8 +28,6 @@ export default async function AdminDashboardPage() {
 
   const totalProducts = allProducts.length;
   const totalUnitsInStock = allProducts.reduce((sum, p) => sum + p.stock, 0);
-  const lowStock = allProducts.filter((p) => p.stock <= LOW_STOCK_THRESHOLD && p.stock > 0);
-  const outOfStock = allProducts.filter((p) => p.stock === 0);
 
   const inventoryCost = allProducts.reduce((sum, p) => sum + totalCost(p, dollarRate) * p.stock, 0);
   const inventoryList = allProducts.reduce((sum, p) => sum + toNumber(p.priceList) * p.stock, 0);
@@ -112,30 +108,6 @@ export default async function AdminDashboardPage() {
           <p className="text-sm text-neutral-500">Ganancia estimada</p>
         </div>
       </div>
-
-      {(lowStock.length > 0 || outOfStock.length > 0) && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <h2 className="mb-2 text-sm font-medium text-amber-900">Atención de stock</h2>
-          <ul className="space-y-1 text-sm text-amber-800">
-            {outOfStock.map((p) => (
-              <li key={p.id}>
-                <Link href={`/admin/productos/${p.id}`} className="underline">
-                  {p.name}
-                </Link>{" "}
-                — sin stock
-              </li>
-            ))}
-            {lowStock.map((p) => (
-              <li key={p.id}>
-                <Link href={`/admin/productos/${p.id}`} className="underline">
-                  {p.name}
-                </Link>{" "}
-                — quedan {p.stock} unidades
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
 
       <div className="flex gap-3">
         <Link
