@@ -8,6 +8,7 @@ import {
   CURRENCY_LABELS,
   baseCostArs,
   commissionAmountArs,
+  merchCostArs,
   totalCost as computeTotalCost,
   type Currency,
 } from "@/lib/pricing";
@@ -55,6 +56,7 @@ export function ProductForm({
   const [priceList, setPriceList] = useState(initialValues?.priceList ?? "0");
 
   const costFields = { costProduct, costShipping, costAdditional, costCurrency, commissionPercent };
+  const merchArs = merchCostArs(costFields, dollarRate);
   const baseArs = baseCostArs(costFields, dollarRate);
   const commissionArs = commissionAmountArs(costFields, dollarRate);
   const totalCost = computeTotalCost(costFields, dollarRate);
@@ -89,32 +91,27 @@ export function ProductForm({
       </div>
 
       <div className="rounded-lg border border-neutral-200 p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-neutral-700">Costos</p>
-          <div className="flex items-center gap-2">
-            <label htmlFor="costCurrency" className="text-xs text-neutral-500">
-              Moneda de los costos
-            </label>
-            <select
-              id="costCurrency"
-              name="costCurrency"
-              value={costCurrency}
-              onChange={(e) => setCostCurrency(e.target.value as Currency)}
-              className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs focus:border-neutral-500 focus:outline-none"
-            >
-              {(Object.entries(CURRENCY_LABELS) as [Currency, string][]).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <p className="mb-3 text-sm font-medium text-neutral-700">Costos</p>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label htmlFor="costProduct" className="block text-xs text-neutral-500">
-              Costo del producto
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="costProduct" className="block text-xs text-neutral-500">
+                Costo del producto (mercadería)
+              </label>
+              <select
+                id="costCurrency"
+                name="costCurrency"
+                value={costCurrency}
+                onChange={(e) => setCostCurrency(e.target.value as Currency)}
+                className="rounded border border-neutral-300 bg-white px-1 py-0.5 text-[11px] focus:border-neutral-500 focus:outline-none"
+              >
+                {(Object.entries(CURRENCY_LABELS) as [Currency, string][]).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input
               id="costProduct"
               name="costProduct"
@@ -125,10 +122,16 @@ export function ProductForm({
               onChange={(e) => setCostProduct(e.target.value)}
               className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
             />
+            {costCurrency === "usd" && (
+              <p className="mt-1 text-[11px] text-neutral-400">
+                US$ {costProduct || 0} × {formatPrice(dollarRate)} = {formatPrice(merchArs)}. Se
+                convierte a pesos al guardar y no se vuelve a mover si cambia la cotización.
+              </p>
+            )}
           </div>
           <div>
             <label htmlFor="costShipping" className="block text-xs text-neutral-500">
-              Flete
+              Flete (siempre en pesos)
             </label>
             <input
               id="costShipping"
@@ -143,7 +146,7 @@ export function ProductForm({
           </div>
           <div>
             <label htmlFor="costAdditional" className="block text-xs text-neutral-500">
-              Costo adicional
+              Costo adicional (siempre en pesos)
             </label>
             <input
               id="costAdditional"
@@ -176,13 +179,10 @@ export function ProductForm({
         </div>
 
         <div className="mt-3 space-y-0.5 border-t border-neutral-100 pt-2 text-sm text-neutral-600">
-          {costCurrency === "usd" && (
-            <p>
-              Costo base: US$ {(parseFloat(costProduct) || 0) + (parseFloat(costShipping) || 0) + (parseFloat(costAdditional) || 0)}{" "}
-              × {formatPrice(dollarRate)} ={" "}
-              <span className="font-medium text-neutral-900">{formatPrice(baseArs)}</span>
-            </p>
-          )}
+          <p>
+            Costo base (mercadería + flete + adicional):{" "}
+            <span className="font-medium text-neutral-900">{formatPrice(baseArs)}</span>
+          </p>
           {parseFloat(commissionPercent) > 0 && (
             <p>
               Comisión ({commissionPercent}%):{" "}

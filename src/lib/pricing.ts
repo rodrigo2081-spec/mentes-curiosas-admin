@@ -21,22 +21,21 @@ export type ProductCostFields = {
   commissionPercent?: string | number | null;
 };
 
-// Suma los tres costos en su moneda original, sin convertir ni aplicar comisión.
-export function rawCost(product: {
-  costProduct: string | number;
-  costShipping: string | number;
-  costAdditional: string | number;
-}): number {
-  return (
-    toNumber(product.costProduct) + toNumber(product.costShipping) + toNumber(product.costAdditional)
-  );
+// La moneda (pesos/dólares) aplica únicamente al costo de la mercadería.
+// Flete y costo adicional siempre están en pesos.
+export function merchCostArs(product: ProductCostFields, dollarRate: number): number {
+  const raw = toNumber(product.costProduct);
+  return product.costCurrency === "usd" ? raw * dollarRate : raw;
 }
 
-// Costo base en pesos: si los costos están en dólares, los convierte con la
-// cotización vigente. `dollarRate` es el valor de 1 USD en pesos.
+// Costo base en pesos: mercadería (convertida si corresponde) + flete + costo
+// adicional (ambos siempre en pesos). `dollarRate` es el valor de 1 USD en pesos.
 export function baseCostArs(product: ProductCostFields, dollarRate: number): number {
-  const raw = rawCost(product);
-  return product.costCurrency === "usd" ? raw * dollarRate : raw;
+  return (
+    merchCostArs(product, dollarRate) +
+    toNumber(product.costShipping) +
+    toNumber(product.costAdditional)
+  );
 }
 
 // Monto de la comisión adicional (%), calculado sobre el costo base ya

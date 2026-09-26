@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { products, productMedia } from "@/db/schema";
 import { auth } from "@/auth";
 import { slugify } from "@/lib/utils";
+import { getDollarRate } from "@/lib/settings";
 
 const mediaSchema = z.array(
   z.object({
@@ -55,6 +56,20 @@ function parseMedia(raw: FormDataEntryValue | null) {
   }
 }
 
+// La moneda (pesos/dólares) es solo un dato de entrada para el costo de la
+// mercadería: si se cargó en dólares, se convierte a pesos ACÁ, una sola vez,
+// con la cotización vigente en este momento, y se guarda ya convertido. Así
+// si la cotización cambia después, este producto no se ve afectado (no nos
+// interesa el valor histórico en dólares, solo el costo en pesos ya fijado).
+// Flete y costo adicional siempre son en pesos, nunca se convierten.
+async function resolveMerchCost(costProduct: number, costCurrency: "ars" | "usd") {
+  if (costCurrency === "usd") {
+    const dollarRate = await getDollarRate();
+    return { costProduct: Math.round(costProduct * dollarRate * 100) / 100, costCurrency: "ars" as const };
+  }
+  return { costProduct, costCurrency: "ars" as const };
+}
+
 async function generateUniqueSlug(name: string, ignoreId?: string) {
   const base = slugify(name) || "producto";
   let slug = base;
@@ -93,6 +108,7 @@ export async function createProduct(
 
   const media = parseMedia(formData.get("media"));
   const slug = await generateUniqueSlug(parsed.data.name);
+  const merch = await resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency);
 
   const [created] = await db
     .insert(products)
@@ -100,10 +116,10 @@ export async function createProduct(
       name: parsed.data.name,
       slug,
       description: parsed.data.description ?? "",
-      costProduct: parsed.data.costProduct.toString(),
+      costProduct: merch.costProduct.toString(),
       costShipping: parsed.data.costShipping.toString(),
       costAdditional: parsed.data.costAdditional.toString(),
-      costCurrency: parsed.data.costCurrency,
+      costCurrency: merch.costCurrency,
       commissionPercent: parsed.data.commissionPercent.toString(),
       priceList: parsed.data.priceList.toString(),
       stock: parsed.data.stock,
@@ -154,6 +170,7 @@ export async function updateProduct(
 
   const media = parseMedia(formData.get("media"));
   const slug = await generateUniqueSlug(parsed.data.name, id);
+  const merch = await resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency);
 
   await db
     .update(products)
@@ -161,10 +178,10 @@ export async function updateProduct(
       name: parsed.data.name,
       slug,
       description: parsed.data.description ?? "",
-      costProduct: parsed.data.costProduct.toString(),
+      costProduct: merch.costProduct.toString(),
       costShipping: parsed.data.costShipping.toString(),
       costAdditional: parsed.data.costAdditional.toString(),
-      costCurrency: parsed.data.costCurrency,
+      costCurrency: merch.costCurrency,
       commissionPercent: parsed.data.commissionPercent.toString(),
       priceList: parsed.data.priceList.toString(),
       stock: parsed.data.stock,
