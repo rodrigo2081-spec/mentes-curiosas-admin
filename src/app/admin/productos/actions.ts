@@ -19,6 +19,7 @@ const mediaSchema = z.array(
 
 const productSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio"),
+  code: z.string().trim().min(1, "El código es obligatorio"),
   description: z.string().trim().optional().default(""),
   costProduct: z.coerce.number().min(0, "El costo no puede ser negativo").default(0),
   costShipping: z.coerce.number().min(0, "El flete no puede ser negativo").default(0),
@@ -70,6 +71,11 @@ async function resolveMerchCost(costProduct: number, costCurrency: "ars" | "usd"
   return { costProduct, costCurrency: "ars" as const };
 }
 
+async function codeInUse(code: string, ignoreId?: string) {
+  const existing = await db.query.products.findFirst({ where: eq(products.code, code) });
+  return !!existing && existing.id !== ignoreId;
+}
+
 async function generateUniqueSlug(name: string, ignoreId?: string) {
   const base = slugify(name) || "producto";
   let slug = base;
@@ -90,6 +96,7 @@ export async function createProduct(
 
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
+    code: formData.get("code"),
     description: formData.get("description"),
     costProduct: formData.get("costProduct"),
     costShipping: formData.get("costShipping"),
@@ -106,6 +113,10 @@ export async function createProduct(
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
 
+  if (await codeInUse(parsed.data.code)) {
+    return { error: `Ya existe un producto con el código "${parsed.data.code}"` };
+  }
+
   const media = parseMedia(formData.get("media"));
   const slug = await generateUniqueSlug(parsed.data.name);
   const merch = await resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency);
@@ -114,6 +125,7 @@ export async function createProduct(
     .insert(products)
     .values({
       name: parsed.data.name,
+      code: parsed.data.code,
       slug,
       description: parsed.data.description ?? "",
       costProduct: merch.costProduct.toString(),
@@ -152,6 +164,7 @@ export async function updateProduct(
 
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
+    code: formData.get("code"),
     description: formData.get("description"),
     costProduct: formData.get("costProduct"),
     costShipping: formData.get("costShipping"),
@@ -168,6 +181,10 @@ export async function updateProduct(
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
 
+  if (await codeInUse(parsed.data.code, id)) {
+    return { error: `Ya existe un producto con el código "${parsed.data.code}"` };
+  }
+
   const media = parseMedia(formData.get("media"));
   const slug = await generateUniqueSlug(parsed.data.name, id);
   const merch = await resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency);
@@ -176,6 +193,7 @@ export async function updateProduct(
     .update(products)
     .set({
       name: parsed.data.name,
+      code: parsed.data.code,
       slug,
       description: parsed.data.description ?? "",
       costProduct: merch.costProduct.toString(),

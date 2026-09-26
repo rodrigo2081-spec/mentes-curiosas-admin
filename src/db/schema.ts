@@ -48,6 +48,9 @@ export const products = pgTable("products", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 200 }).notNull(),
   slug: varchar("slug", { length: 220 }).notNull().unique(),
+  // Código interno del producto. Nulo solo en los productos cargados antes
+  // de agregar este campo; toda carga nueva lo exige y no se puede repetir.
+  code: varchar("code", { length: 60 }).unique(),
   description: text("description").default("").notNull(),
   // Costos que arman el costo total del producto. Se cargan en `costCurrency`
   // (pesos o dólares); el precio de venta siempre es en pesos.

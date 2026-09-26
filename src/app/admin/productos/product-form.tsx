@@ -18,6 +18,7 @@ type Category = { id: string; name: string };
 
 export type ProductFormValues = {
   name: string;
+  code: string | null;
   description: string;
   costProduct: string;
   costShipping: string;
@@ -64,17 +65,32 @@ export function ProductForm({
 
   return (
     <form action={formAction} className="max-w-2xl space-y-6">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-neutral-700">
-          Nombre
-        </label>
-        <input
-          id="name"
-          name="name"
-          required
-          defaultValue={initialValues?.name}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-neutral-700">
+            Nombre
+          </label>
+          <input
+            id="name"
+            name="name"
+            required
+            defaultValue={initialValues?.name}
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label htmlFor="code" className="block text-sm font-medium text-neutral-700">
+            Código
+          </label>
+          <input
+            id="code"
+            name="code"
+            required
+            defaultValue={initialValues?.code ?? ""}
+            placeholder="Ej: JU-0001"
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+          />
+        </div>
       </div>
 
       <div>

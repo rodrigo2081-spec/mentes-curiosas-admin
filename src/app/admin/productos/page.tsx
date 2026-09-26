@@ -53,6 +53,7 @@ export default async function ProductosPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500">
               <tr>
+                <th className="px-4 py-3 font-medium">Código</th>
                 <th className="px-4 py-3 font-medium">Producto</th>
                 <th className="px-4 py-3 font-medium">Categoría</th>
                 <th className="px-4 py-3 font-medium">Costo</th>
@@ -65,6 +66,9 @@ export default async function ProductosPage() {
             <tbody className="divide-y divide-neutral-100">
               {allProducts.map((product) => (
                 <tr key={product.id}>
+                  <td className="px-4 py-3 text-neutral-600">
+                    {product.code ?? <span className="text-neutral-300">—</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-neutral-100">
