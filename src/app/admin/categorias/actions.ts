@@ -29,6 +29,7 @@ export async function createCategory(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Nombre inválido" };
   }
+  const manualPriceList = formData.get("manualPriceList") === "on";
 
   const base = slugify(parsed.data) || "categoria";
   let slug = base;
@@ -38,10 +39,17 @@ export async function createCategory(
     slug = `${base}-${counter}`;
   }
 
-  await db.insert(categories).values({ name: parsed.data, slug });
+  await db.insert(categories).values({ name: parsed.data, slug, manualPriceList });
   revalidatePath("/admin/categorias");
   revalidatePath("/admin/productos");
   return {};
+}
+
+export async function toggleManualPriceList(id: string, manualPriceList: boolean) {
+  await requireAdmin();
+  await db.update(categories).set({ manualPriceList }).where(eq(categories.id, id));
+  revalidatePath("/admin/categorias");
+  revalidatePath("/admin/productos");
 }
 
 export async function deleteCategory(id: string) {

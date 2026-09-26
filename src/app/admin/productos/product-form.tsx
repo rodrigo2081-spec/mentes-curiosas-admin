@@ -14,7 +14,7 @@ import {
 } from "@/lib/pricing";
 import type { ProductFormState } from "./actions";
 
-type Category = { id: string; name: string };
+type Category = { id: string; name: string; manualPriceList: boolean };
 
 export type ProductFormValues = {
   name: string;
@@ -55,13 +55,19 @@ export function ProductForm({
     initialValues?.commissionPercent ?? "0"
   );
   const [priceList, setPriceList] = useState(initialValues?.priceList ?? "0");
+  const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? "");
 
   const costFields = { costProduct, costShipping, costAdditional, costCurrency, commissionPercent };
   const merchArs = merchCostArs(costFields, dollarRate);
   const baseArs = baseCostArs(costFields, dollarRate);
   const commissionArs = commissionAmountArs(costFields, dollarRate);
   const totalCost = computeTotalCost(costFields, dollarRate);
-  const priceCash = (parseFloat(priceList) || 0) * (1 - CASH_DISCOUNT_RATE);
+
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isManualPrice = selectedCategory?.manualPriceList ?? false;
+  const autoPriceList = Math.round(totalCost * 2 * 100) / 100;
+  const effectivePriceList = isManualPrice ? parseFloat(priceList) || 0 : autoPriceList;
+  const priceCash = effectivePriceList * (1 - CASH_DISCOUNT_RATE);
 
   return (
     <form action={formAction} className="max-w-2xl space-y-6">
@@ -217,17 +223,33 @@ export function ProductForm({
           <label htmlFor="priceList" className="block text-sm font-medium text-neutral-700">
             Precio de Venta Lista
           </label>
-          <input
-            id="priceList"
-            name="priceList"
-            type="number"
-            step="0.01"
-            min={0}
-            required
-            value={priceList}
-            onChange={(e) => setPriceList(e.target.value)}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
-          />
+          {isManualPrice ? (
+            <input
+              id="priceList"
+              name="priceList"
+              type="number"
+              step="0.01"
+              min={0}
+              required
+              value={priceList}
+              onChange={(e) => setPriceList(e.target.value)}
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+          ) : (
+            <>
+              <input
+                id="priceList"
+                name="priceList"
+                type="number"
+                readOnly
+                value={autoPriceList}
+                className="mt-1 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600"
+              />
+              <p className="mt-1 text-[11px] text-neutral-400">
+                Automático: 100% de margen sobre el costo total (x2).
+              </p>
+            </>
+          )}
           <p className="mt-1 text-xs text-neutral-500">
             Precio de Contado (5% off, efectivo/transferencia):{" "}
             <span className="font-medium text-neutral-700">{formatPrice(priceCash)}</span>
@@ -256,7 +278,8 @@ export function ProductForm({
         <select
           id="categoryId"
           name="categoryId"
-          defaultValue={initialValues?.categoryId ?? ""}
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
           className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
         >
           <option value="">Sin categoría</option>

@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { deleteCategory } from "./actions";
 import { NewCategoryForm } from "./new-category-form";
+import { ManualPriceToggle } from "./manual-price-toggle";
 import { DeleteButton } from "../productos/delete-button";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,10 @@ export default async function CategoriasPage() {
           {allCategories.map((cat) => (
             <li key={cat.id} className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-neutral-900">{cat.name}</span>
-              <DeleteButton id={cat.id} name={cat.name} action={deleteCategory} />
+              <div className="flex items-center gap-2">
+                <ManualPriceToggle id={cat.id} manualPriceList={cat.manualPriceList} />
+                <DeleteButton id={cat.id} name={cat.name} action={deleteCategory} />
+              </div>
             </li>
           ))}
         </ul>

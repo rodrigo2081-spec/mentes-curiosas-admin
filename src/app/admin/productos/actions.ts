@@ -5,10 +5,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { products, productMedia } from "@/db/schema";
+import { products, productMedia, categories } from "@/db/schema";
 import { auth } from "@/auth";
 import { slugify } from "@/lib/utils";
 import { getDollarRate } from "@/lib/settings";
+import { totalCost } from "@/lib/pricing";
 
 const mediaSchema = z.array(
   z.object({
@@ -63,12 +64,32 @@ function parseMedia(raw: FormDataEntryValue | null) {
 // si la cotización cambia después, este producto no se ve afectado (no nos
 // interesa el valor histórico en dólares, solo el costo en pesos ya fijado).
 // Flete y costo adicional siempre son en pesos, nunca se convierten.
-async function resolveMerchCost(costProduct: number, costCurrency: "ars" | "usd") {
+function resolveMerchCost(costProduct: number, costCurrency: "ars" | "usd", dollarRate: number) {
   if (costCurrency === "usd") {
-    const dollarRate = await getDollarRate();
     return { costProduct: Math.round(costProduct * dollarRate * 100) / 100, costCurrency: "ars" as const };
   }
   return { costProduct, costCurrency: "ars" as const };
+}
+
+// El Precio de Lista se calcula automático como el doble del costo total
+// (100% de margen), salvo en categorías marcadas como "precio manual" (ej.
+// Libro), donde se respeta el valor que cargó el admin.
+async function resolvePriceList(
+  categoryId: string | null,
+  manualPriceList: number,
+  costFields: { costProduct: number; costShipping: number; costAdditional: number; commissionPercent: number },
+  dollarRate: number
+) {
+  const category = categoryId
+    ? await db.query.categories.findFirst({ where: eq(categories.id, categoryId) })
+    : null;
+
+  if (category?.manualPriceList) {
+    return manualPriceList;
+  }
+
+  const cost = totalCost({ ...costFields, costCurrency: "ars" }, dollarRate);
+  return Math.round(cost * 2 * 100) / 100;
 }
 
 async function codeInUse(code: string, ignoreId?: string) {
@@ -119,7 +140,20 @@ export async function createProduct(
 
   const media = parseMedia(formData.get("media"));
   const slug = await generateUniqueSlug(parsed.data.name);
-  const merch = await resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency);
+  const dollarRate = await getDollarRate();
+  const merch = resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency, dollarRate);
+  const categoryId = parsed.data.categoryId || null;
+  const priceList = await resolvePriceList(
+    categoryId,
+    parsed.data.priceList,
+    {
+      costProduct: merch.costProduct,
+      costShipping: parsed.data.costShipping,
+      costAdditional: parsed.data.costAdditional,
+      commissionPercent: parsed.data.commissionPercent,
+    },
+    dollarRate
+  );
 
   const [created] = await db
     .insert(products)
@@ -133,9 +167,9 @@ export async function createProduct(
       costAdditional: parsed.data.costAdditional.toString(),
       costCurrency: merch.costCurrency,
       commissionPercent: parsed.data.commissionPercent.toString(),
-      priceList: parsed.data.priceList.toString(),
+      priceList: priceList.toString(),
       stock: parsed.data.stock,
-      categoryId: parsed.data.categoryId || null,
+      categoryId,
       isActive: parsed.data.isActive ?? true,
     })
     .returning({ id: products.id });
@@ -187,7 +221,20 @@ export async function updateProduct(
 
   const media = parseMedia(formData.get("media"));
   const slug = await generateUniqueSlug(parsed.data.name, id);
-  const merch = await resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency);
+  const dollarRate = await getDollarRate();
+  const merch = resolveMerchCost(parsed.data.costProduct, parsed.data.costCurrency, dollarRate);
+  const categoryId = parsed.data.categoryId || null;
+  const priceList = await resolvePriceList(
+    categoryId,
+    parsed.data.priceList,
+    {
+      costProduct: merch.costProduct,
+      costShipping: parsed.data.costShipping,
+      costAdditional: parsed.data.costAdditional,
+      commissionPercent: parsed.data.commissionPercent,
+    },
+    dollarRate
+  );
 
   await db
     .update(products)
@@ -201,9 +248,9 @@ export async function updateProduct(
       costAdditional: parsed.data.costAdditional.toString(),
       costCurrency: merch.costCurrency,
       commissionPercent: parsed.data.commissionPercent.toString(),
-      priceList: parsed.data.priceList.toString(),
+      priceList: priceList.toString(),
       stock: parsed.data.stock,
-      categoryId: parsed.data.categoryId || null,
+      categoryId,
       isActive: parsed.data.isActive ?? true,
       updatedAt: new Date(),
     })

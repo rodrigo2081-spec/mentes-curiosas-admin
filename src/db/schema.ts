@@ -41,6 +41,10 @@ export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 120 }).notNull(),
   slug: varchar("slug", { length: 140 }).notNull().unique(),
+  // Si es true, el Precio de Lista de los productos de esta categoría se
+  // carga a mano. Si es false (default), se calcula automático como el
+  // doble del costo total (100% de margen).
+  manualPriceList: boolean("manual_price_list").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

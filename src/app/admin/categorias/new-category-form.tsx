@@ -17,23 +17,29 @@ export function NewCategoryForm() {
   }, [pending, state]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex items-start gap-2">
-      <div className="flex-1">
-        <input
-          name="name"
-          placeholder="Nombre de la categoría"
-          required
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
-        />
-        {state?.error && <p className="mt-1 text-sm text-red-600">{state.error}</p>}
+    <form ref={formRef} action={formAction} className="space-y-2">
+      <div className="flex items-start gap-2">
+        <div className="flex-1">
+          <input
+            name="name"
+            placeholder="Nombre de la categoría"
+            required
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+          />
+          {state?.error && <p className="mt-1 text-sm text-red-600">{state.error}</p>}
+        </div>
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+        >
+          Agregar
+        </button>
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
-      >
-        Agregar
-      </button>
+      <label className="flex items-center gap-2 text-xs text-neutral-600">
+        <input type="checkbox" name="manualPriceList" className="rounded border-neutral-300" />
+        El Precio de Lista se carga a mano (si no, se calcula automático: x2 del costo total)
+      </label>
     </form>
   );
 }
