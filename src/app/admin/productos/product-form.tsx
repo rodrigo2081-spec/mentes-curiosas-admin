@@ -46,6 +46,7 @@ export function ProductForm({
   dollarRate: number;
 }) {
   const [state, formAction, pending] = useActionState<ProductFormState, FormData>(action, {});
+  const isEditing = Boolean(initialValues);
 
   const [costProduct, setCostProduct] = useState(initialValues?.costProduct ?? "0");
   const [costShipping, setCostShipping] = useState(initialValues?.costShipping ?? "0");
@@ -88,14 +89,19 @@ export function ProductForm({
           <label htmlFor="code" className="block text-sm font-medium text-neutral-700">
             Código
           </label>
-          <input
-            id="code"
-            name="code"
-            required
-            defaultValue={initialValues?.code ?? ""}
-            placeholder="Ej: JU-0001"
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
-          />
+          {isEditing ? (
+            <input
+              id="code"
+              name="code"
+              required
+              defaultValue={initialValues?.code ?? ""}
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+          ) : (
+            <p className="mt-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-400">
+              Se asigna automáticamente al guardar
+            </p>
+          )}
         </div>
       </div>
 

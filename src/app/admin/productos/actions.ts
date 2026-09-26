@@ -8,7 +8,7 @@ import { db } from "@/db";
 import { products, productMedia, categories } from "@/db/schema";
 import { auth } from "@/auth";
 import { slugify } from "@/lib/utils";
-import { getDollarRate } from "@/lib/settings";
+import { getDollarRate, getNextProductCode } from "@/lib/settings";
 import { totalCost } from "@/lib/pricing";
 
 const mediaSchema = z.array(
@@ -18,9 +18,12 @@ const mediaSchema = z.array(
   })
 );
 
+// El código es obligatorio para editar (se puede corregir a mano), pero al
+// cargar un producto nuevo se ignora lo que venga del form: se asigna solo
+// con getNextProductCode().
 const productSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio"),
-  code: z.string().trim().min(1, "El código es obligatorio"),
+  code: z.string().trim().optional().default(""),
   description: z.string().trim().optional().default(""),
   costProduct: z.coerce.number().min(0, "El costo no puede ser negativo").default(0),
   costShipping: z.coerce.number().min(0, "El flete no puede ser negativo").default(0),
@@ -109,6 +112,16 @@ async function generateUniqueSlug(name: string, ignoreId?: string) {
   }
 }
 
+// Genera el próximo código automático, saltando cualquier valor que por
+// algún motivo ya esté en uso (por ejemplo si se asignó a mano).
+async function generateUniqueProductCode() {
+  for (let attempts = 0; attempts < 20; attempts += 1) {
+    const code = await getNextProductCode();
+    if (!(await codeInUse(code))) return code;
+  }
+  throw new Error("No se pudo generar un código de producto único");
+}
+
 export async function createProduct(
   _prevState: ProductFormState,
   formData: FormData
@@ -134,10 +147,7 @@ export async function createProduct(
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
 
-  if (await codeInUse(parsed.data.code)) {
-    return { error: `Ya existe un producto con el código "${parsed.data.code}"` };
-  }
-
+  const code = await generateUniqueProductCode();
   const media = parseMedia(formData.get("media"));
   const slug = await generateUniqueSlug(parsed.data.name);
   const dollarRate = await getDollarRate();
@@ -159,7 +169,7 @@ export async function createProduct(
     .insert(products)
     .values({
       name: parsed.data.name,
-      code: parsed.data.code,
+      code,
       slug,
       description: parsed.data.description ?? "",
       costProduct: merch.costProduct.toString(),
@@ -215,8 +225,13 @@ export async function updateProduct(
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
 
-  if (await codeInUse(parsed.data.code, id)) {
-    return { error: `Ya existe un producto con el código "${parsed.data.code}"` };
+  const code = parsed.data.code.trim();
+  if (!code) {
+    return { error: "El código es obligatorio" };
+  }
+
+  if (await codeInUse(code, id)) {
+    return { error: `Ya existe un producto con el código "${code}"` };
   }
 
   const media = parseMedia(formData.get("media"));
@@ -240,7 +255,7 @@ export async function updateProduct(
     .update(products)
     .set({
       name: parsed.data.name,
-      code: parsed.data.code,
+      code,
       slug,
       description: parsed.data.description ?? "",
       costProduct: merch.costProduct.toString(),
