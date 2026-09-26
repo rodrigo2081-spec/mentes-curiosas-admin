@@ -251,7 +251,7 @@ export function ProductForm({
             </>
           )}
           <p className="mt-1 text-xs text-neutral-500">
-            Precio de Contado (5% off, efectivo/transferencia):{" "}
+            Precio de Contado (10% off, efectivo/transferencia):{" "}
             <span className="font-medium text-neutral-700">{formatPrice(priceCash)}</span>
           </p>
         </div>

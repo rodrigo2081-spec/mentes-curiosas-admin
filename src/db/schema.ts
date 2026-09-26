@@ -65,7 +65,7 @@ export const products = pgTable("products", {
   // Comisión adicional (%) que se paga por la compra de la mercadería. Se
   // suma como porcentaje sobre el costo (ya convertido a pesos).
   commissionPercent: numeric("commission_percent", { precision: 5, scale: 2 }).notNull().default("0"),
-  // Precio de venta "de lista". El precio de contado (5% off) se calcula a partir de este.
+  // Precio de venta "de lista". El precio de contado (10% off) se calcula a partir de este.
   // Nota: la columna en la base sigue llamándose "price" (columna original) para que la
   // migración sea un ALTER simple en vez de un rename ambiguo.
   priceList: numeric("price", { precision: 12, scale: 2 }).notNull().default("0"),

@@ -1,4 +1,4 @@
-export const CASH_DISCOUNT_RATE = 0.05;
+export const CASH_DISCOUNT_RATE = 0.1;
 
 export function toNumber(value: string | number | null | undefined): number {
   if (value === null || value === undefined) return 0;
@@ -84,7 +84,7 @@ export function cashBoxForPaymentMethod(method: PaymentMethod): CashBox {
   return (found?.cashBox as CashBox) ?? "efectivo";
 }
 
-// Precio aplicado a una venta según el método de pago: contado (5% off) para
+// Precio aplicado a una venta según el método de pago: contado (10% off) para
 // efectivo/transferencia, precio de lista para tarjeta.
 export function priceForPaymentMethod(priceList: string | number, method: PaymentMethod): number {
   const found = PAYMENT_METHODS.find((m) => m.value === method);

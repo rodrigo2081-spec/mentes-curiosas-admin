@@ -141,7 +141,7 @@ export function SaleForm({ products }: { products: Product[] }) {
         </select>
         <p className="mt-1 text-xs text-neutral-500">
           {PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.cashDiscount
-            ? "Se aplica el precio de contado (5% off)."
+            ? "Se aplica el precio de contado (10% off)."
             : "Se cobra el precio de lista (sin descuento)."}
         </p>
       </div>
