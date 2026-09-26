@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { expenses, profitWithdrawals, cashTransfers } from "@/db/schema";
 import { auth } from "@/auth";
+import { setDollarRate } from "@/lib/settings";
 
 async function requireAdmin() {
   const session = await auth();
@@ -20,6 +21,29 @@ const cashBoxSchema = z.enum(CASH_BOXES);
 function revalidateAll() {
   revalidatePath("/admin/administracion");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
+}
+
+// ----- Cotización del dólar -----
+
+const dollarRateSchema = z.object({
+  dollarRate: z.coerce.number().positive("La cotización tiene que ser mayor a 0"),
+});
+
+export type DollarRateFormState = { error?: string };
+
+export async function updateDollarRate(
+  _prevState: DollarRateFormState,
+  formData: FormData
+): Promise<DollarRateFormState> {
+  await requireAdmin();
+  const parsed = dollarRateSchema.safeParse({ dollarRate: formData.get("dollarRate") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+  await setDollarRate(parsed.data.dollarRate);
+  revalidateAll();
+  return {};
 }
 
 // ----- Gastos -----

@@ -25,6 +25,10 @@ export const paymentMethodEnum = pgEnum("payment_method", [
 // Las tres cajas del negocio.
 export const cashBoxEnum = pgEnum("cash_box", ["efectivo", "banco_flor", "banco_rodrigo"]);
 
+// Moneda en la que se cargan los costos de un producto (costo del producto,
+// flete, costo adicional). El precio de venta siempre es en pesos.
+export const currencyEnum = pgEnum("currency", ["ars", "usd"]);
+
 export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 120 }).notNull(),
@@ -45,10 +49,15 @@ export const products = pgTable("products", {
   name: varchar("name", { length: 200 }).notNull(),
   slug: varchar("slug", { length: 220 }).notNull().unique(),
   description: text("description").default("").notNull(),
-  // Costos que arman el costo total del producto.
+  // Costos que arman el costo total del producto. Se cargan en `costCurrency`
+  // (pesos o dólares); el precio de venta siempre es en pesos.
   costProduct: numeric("cost_product", { precision: 12, scale: 2 }).notNull().default("0"),
   costShipping: numeric("cost_shipping", { precision: 12, scale: 2 }).notNull().default("0"),
   costAdditional: numeric("cost_additional", { precision: 12, scale: 2 }).notNull().default("0"),
+  costCurrency: currencyEnum("cost_currency").notNull().default("ars"),
+  // Comisión adicional (%) que se paga por la compra de la mercadería. Se
+  // suma como porcentaje sobre el costo (ya convertido a pesos).
+  commissionPercent: numeric("commission_percent", { precision: 5, scale: 2 }).notNull().default("0"),
   // Precio de venta "de lista". El precio de contado (5% off) se calcula a partir de este.
   // Nota: la columna en la base sigue llamándose "price" (columna original) para que la
   // migración sea un ALTER simple en vez de un rename ambiguo.
@@ -119,6 +128,15 @@ export const profitWithdrawals = pgTable("profit_withdrawals", {
   note: text("note"),
   date: timestamp("date", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Configuración general del sistema (clave/valor). Por ahora se usa para la
+// cotización del dólar (clave "dollar_rate"), usada para convertir a pesos
+// los costos de productos cargados en dólares.
+export const settings = pgTable("settings", {
+  key: varchar("key", { length: 60 }).primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const cashTransfers = pgTable("cash_transfers", {

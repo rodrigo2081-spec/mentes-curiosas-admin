@@ -14,6 +14,7 @@ import {
   totalCost,
   type PaymentMethod,
 } from "@/lib/pricing";
+import { getDollarRate } from "@/lib/settings";
 import { sendSaleNotifications } from "@/lib/email";
 
 async function requireAdmin() {
@@ -89,11 +90,12 @@ export async function createSale(
   }
 
   const cashBox = cashBoxForPaymentMethod(parsed.data.paymentMethod);
+  const dollarRate = await getDollarRate();
 
   const items = cartParsed.data.map((item) => {
     const product = productMap.get(item.productId)!;
     const unitPrice = priceForPaymentMethod(product.priceList, parsed.data.paymentMethod);
-    const unitCost = totalCost(product);
+    const unitCost = totalCost(product, dollarRate);
     return {
       productId: product.id,
       productName: product.name,

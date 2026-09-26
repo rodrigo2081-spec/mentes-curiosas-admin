@@ -22,6 +22,12 @@ const productSchema = z.object({
   costProduct: z.coerce.number().min(0, "El costo no puede ser negativo").default(0),
   costShipping: z.coerce.number().min(0, "El flete no puede ser negativo").default(0),
   costAdditional: z.coerce.number().min(0, "El costo adicional no puede ser negativo").default(0),
+  costCurrency: z.enum(["ars", "usd"]).default("ars"),
+  commissionPercent: z.coerce
+    .number()
+    .min(0, "La comisión no puede ser negativa")
+    .max(100, "La comisión no puede superar el 100%")
+    .default(0),
   priceList: z.coerce.number().min(0, "El precio no puede ser negativo"),
   stock: z.coerce.number().int().min(0, "El stock no puede ser negativo"),
   categoryId: z.string().uuid().optional().or(z.literal("")),
@@ -73,6 +79,8 @@ export async function createProduct(
     costProduct: formData.get("costProduct"),
     costShipping: formData.get("costShipping"),
     costAdditional: formData.get("costAdditional"),
+    costCurrency: formData.get("costCurrency"),
+    commissionPercent: formData.get("commissionPercent"),
     priceList: formData.get("priceList"),
     stock: formData.get("stock"),
     categoryId: formData.get("categoryId"),
@@ -95,6 +103,8 @@ export async function createProduct(
       costProduct: parsed.data.costProduct.toString(),
       costShipping: parsed.data.costShipping.toString(),
       costAdditional: parsed.data.costAdditional.toString(),
+      costCurrency: parsed.data.costCurrency,
+      commissionPercent: parsed.data.commissionPercent.toString(),
       priceList: parsed.data.priceList.toString(),
       stock: parsed.data.stock,
       categoryId: parsed.data.categoryId || null,
@@ -130,6 +140,8 @@ export async function updateProduct(
     costProduct: formData.get("costProduct"),
     costShipping: formData.get("costShipping"),
     costAdditional: formData.get("costAdditional"),
+    costCurrency: formData.get("costCurrency"),
+    commissionPercent: formData.get("commissionPercent"),
     priceList: formData.get("priceList"),
     stock: formData.get("stock"),
     categoryId: formData.get("categoryId"),
@@ -152,6 +164,8 @@ export async function updateProduct(
       costProduct: parsed.data.costProduct.toString(),
       costShipping: parsed.data.costShipping.toString(),
       costAdditional: parsed.data.costAdditional.toString(),
+      costCurrency: parsed.data.costCurrency,
+      commissionPercent: parsed.data.commissionPercent.toString(),
       priceList: parsed.data.priceList.toString(),
       stock: parsed.data.stock,
       categoryId: parsed.data.categoryId || null,

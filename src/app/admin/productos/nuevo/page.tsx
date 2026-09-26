@@ -1,13 +1,17 @@
 import { db } from "@/db";
+import { getDollarRate } from "@/lib/settings";
 import { ProductForm } from "../product-form";
 import { createProduct } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function NuevoProductoPage() {
-  const categories = await db.query.categories.findMany({
-    orderBy: (categories, { asc }) => [asc(categories.name)],
-  });
+  const [categories, dollarRate] = await Promise.all([
+    db.query.categories.findMany({
+      orderBy: (categories, { asc }) => [asc(categories.name)],
+    }),
+    getDollarRate(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -17,7 +21,12 @@ export default async function NuevoProductoPage() {
           Se va a mostrar en la tienda online automáticamente si queda marcado como visible.
         </p>
       </div>
-      <ProductForm action={createProduct} categories={categories} submitLabel="Cargar producto" />
+      <ProductForm
+        action={createProduct}
+        categories={categories}
+        submitLabel="Cargar producto"
+        dollarRate={dollarRate}
+      />
     </div>
   );
 }

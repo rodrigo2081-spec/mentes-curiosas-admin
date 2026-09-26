@@ -6,7 +6,23 @@ export function toNumber(value: string | number | null | undefined): number {
   return Number.isFinite(num) ? num : 0;
 }
 
-export function totalCost(product: {
+export type Currency = "ars" | "usd";
+
+export const CURRENCY_LABELS: Record<Currency, string> = {
+  ars: "Pesos (ARS)",
+  usd: "Dólares (USD)",
+};
+
+export type ProductCostFields = {
+  costProduct: string | number;
+  costShipping: string | number;
+  costAdditional: string | number;
+  costCurrency: Currency;
+  commissionPercent?: string | number | null;
+};
+
+// Suma los tres costos en su moneda original, sin convertir ni aplicar comisión.
+export function rawCost(product: {
   costProduct: string | number;
   costShipping: string | number;
   costAdditional: string | number;
@@ -14,6 +30,24 @@ export function totalCost(product: {
   return (
     toNumber(product.costProduct) + toNumber(product.costShipping) + toNumber(product.costAdditional)
   );
+}
+
+// Costo base en pesos: si los costos están en dólares, los convierte con la
+// cotización vigente. `dollarRate` es el valor de 1 USD en pesos.
+export function baseCostArs(product: ProductCostFields, dollarRate: number): number {
+  const raw = rawCost(product);
+  return product.costCurrency === "usd" ? raw * dollarRate : raw;
+}
+
+// Monto de la comisión adicional (%), calculado sobre el costo base ya
+// convertido a pesos.
+export function commissionAmountArs(product: ProductCostFields, dollarRate: number): number {
+  return baseCostArs(product, dollarRate) * (toNumber(product.commissionPercent) / 100);
+}
+
+// Costo total en pesos: costo base (convertido si corresponde) + comisión.
+export function totalCost(product: ProductCostFields, dollarRate: number): number {
+  return baseCostArs(product, dollarRate) + commissionAmountArs(product, dollarRate);
 }
 
 export function priceCash(priceList: string | number): number {

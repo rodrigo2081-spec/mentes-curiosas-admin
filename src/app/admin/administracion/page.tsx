@@ -2,29 +2,42 @@ import { db } from "@/db";
 import { formatPrice } from "@/lib/utils";
 import { CASH_BOX_LABELS } from "@/lib/pricing";
 import { computeCashBoxBalances } from "@/lib/cashbox-balances";
+import { getDollarRate } from "@/lib/settings";
 import { deleteExpense, deleteWithdrawal, deleteTransfer } from "./actions";
-import { ExpenseForm, WithdrawalForm, TransferForm } from "./forms";
+import { ExpenseForm, WithdrawalForm, TransferForm, DollarRateForm } from "./forms";
 import { DeleteButton } from "../productos/delete-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdministracionPage() {
-  const [balances, recentExpenses, recentWithdrawals, recentTransfers] = await Promise.all([
-    computeCashBoxBalances(),
-    db.query.expenses.findMany({ orderBy: (e, { desc }) => [desc(e.date)], limit: 15 }),
-    db.query.profitWithdrawals.findMany({
-      orderBy: (w, { desc }) => [desc(w.date)],
-      limit: 15,
-    }),
-    db.query.cashTransfers.findMany({ orderBy: (t, { desc }) => [desc(t.date)], limit: 15 }),
-  ]);
+  const [balances, recentExpenses, recentWithdrawals, recentTransfers, dollarRate] =
+    await Promise.all([
+      computeCashBoxBalances(),
+      db.query.expenses.findMany({ orderBy: (e, { desc }) => [desc(e.date)], limit: 15 }),
+      db.query.profitWithdrawals.findMany({
+        orderBy: (w, { desc }) => [desc(w.date)],
+        limit: 15,
+      }),
+      db.query.cashTransfers.findMany({ orderBy: (t, { desc }) => [desc(t.date)], limit: 15 }),
+      getDollarRate(),
+    ]);
 
   return (
     <div className="space-y-10">
       <div>
         <h1 className="text-2xl font-semibold text-neutral-900">Administración</h1>
-        <p className="text-sm text-neutral-500">Cajas, gastos, retiros y traspasos</p>
+        <p className="text-sm text-neutral-500">Cajas, gastos, retiros, traspasos y cotización del dólar</p>
       </div>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Cotización del dólar</h2>
+        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <p className="mb-3 text-sm text-neutral-600">
+            Cotización actual: <span className="font-medium text-neutral-900">{formatPrice(dollarRate)}</span> por USD
+          </p>
+          <DollarRateForm currentRate={dollarRate} />
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {(Object.entries(CASH_BOX_LABELS) as [keyof typeof CASH_BOX_LABELS, string][]).map(

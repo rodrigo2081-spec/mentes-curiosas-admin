@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
+import { getDollarRate } from "@/lib/settings";
 import { ProductForm } from "../product-form";
 import { updateProduct } from "../actions";
 
@@ -10,7 +11,7 @@ export default async function EditarProductoPage(
 ) {
   const { id } = await props.params;
 
-  const [product, categories] = await Promise.all([
+  const [product, categories, dollarRate] = await Promise.all([
     db.query.products.findFirst({
       where: (products, { eq }) => eq(products.id, id),
       with: { media: { orderBy: (media, { asc }) => [asc(media.position)] } },
@@ -18,6 +19,7 @@ export default async function EditarProductoPage(
     db.query.categories.findMany({
       orderBy: (categories, { asc }) => [asc(categories.name)],
     }),
+    getDollarRate(),
   ]);
 
   if (!product) notFound();
@@ -34,12 +36,15 @@ export default async function EditarProductoPage(
         action={updateWithId}
         categories={categories}
         submitLabel="Guardar cambios"
+        dollarRate={dollarRate}
         initialValues={{
           name: product.name,
           description: product.description,
           costProduct: product.costProduct,
           costShipping: product.costShipping,
           costAdditional: product.costAdditional,
+          costCurrency: product.costCurrency,
+          commissionPercent: product.commissionPercent,
           priceList: product.priceList,
           stock: product.stock,
           categoryId: product.categoryId,

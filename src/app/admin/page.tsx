@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { sales, expenses } from "@/db/schema";
 import { formatPrice } from "@/lib/utils";
 import { priceCash, toNumber, totalCost } from "@/lib/pricing";
+import { getDollarRate } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function AdminDashboardPage() {
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const monthLabel = now.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
 
-  const [allProducts, salesThisMonth, expensesThisMonth] = await Promise.all([
+  const [allProducts, salesThisMonth, expensesThisMonth, dollarRate] = await Promise.all([
     db.query.products.findMany(),
     db.query.sales.findMany({
       where: and(gte(sales.date, monthStart), lt(sales.date, monthEnd)),
@@ -24,13 +25,14 @@ export default async function AdminDashboardPage() {
     db.query.expenses.findMany({
       where: and(gte(expenses.date, monthStart), lt(expenses.date, monthEnd)),
     }),
+    getDollarRate(),
   ]);
 
   const totalProducts = allProducts.length;
   const lowStock = allProducts.filter((p) => p.stock <= LOW_STOCK_THRESHOLD && p.stock > 0);
   const outOfStock = allProducts.filter((p) => p.stock === 0);
 
-  const inventoryCost = allProducts.reduce((sum, p) => sum + totalCost(p) * p.stock, 0);
+  const inventoryCost = allProducts.reduce((sum, p) => sum + totalCost(p, dollarRate) * p.stock, 0);
   const inventoryList = allProducts.reduce((sum, p) => sum + toNumber(p.priceList) * p.stock, 0);
   const inventoryCash = allProducts.reduce(
     (sum, p) => sum + priceCash(p.priceList) * p.stock,
@@ -50,7 +52,9 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-neutral-900">Panel</h1>
-        <p className="text-sm text-neutral-500 capitalize">{monthLabel}</p>
+        <p className="text-sm text-neutral-500 capitalize">
+          {monthLabel} · Cotización dólar: {formatPrice(dollarRate)}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
