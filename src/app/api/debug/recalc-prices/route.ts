@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { products } from "@/db/schema";
@@ -10,8 +10,16 @@ import { totalCost, roundToHundred } from "@/lib/pricing";
 // aplicando el nuevo redondeo a la centena. No toca productos de categorías
 // con precio manual (ej. Libro) ni sin categoría (se tratan como precio
 // manual: nadie define el "doble del costo" para ellos). Se borra apenas
-// se confirma que corrió bien.
-export async function POST() {
+// se confirma que corrió bien. Requiere ?confirm=1 para evitar que lo
+// dispare un crawler mientras está deployado.
+export async function GET(request: NextRequest) {
+  if (request.nextUrl.searchParams.get("confirm") !== "1") {
+    return NextResponse.json({ error: "Falta ?confirm=1" }, { status: 400 });
+  }
+  return recalc();
+}
+
+async function recalc() {
   const dollarRate = await getDollarRate();
 
   const all = await db.query.products.findMany({
