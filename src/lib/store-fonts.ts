@@ -1,4 +1,4 @@
-import { Fredoka, Nunito, Playpen_Sans } from "next/font/google";
+import { Caveat, Fredoka, Nunito, Playpen_Sans } from "next/font/google";
 
 // Fuentes de marca para la tienda online (ver brief de estilo). Se exponen
 // como variables CSS con nombres propios para no pisar los tokens de
@@ -27,4 +27,11 @@ export const playpenSans = Playpen_Sans({
   display: "swap",
 });
 
-export const storeFontVariables = `${fredoka.variable} ${nunito.variable} ${playpenSans.variable}`;
+export const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-caveat",
+  display: "swap",
+});
+
+export const storeFontVariables = `${fredoka.variable} ${nunito.variable} ${playpenSans.variable} ${caveat.variable}`;

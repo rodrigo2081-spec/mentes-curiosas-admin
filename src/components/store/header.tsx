@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "./cart-context";
 
@@ -9,10 +10,17 @@ export function StoreHeader({ categories }: { categories: Category[] }) {
   const { count } = useCart();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-black/5 bg-cream/95 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b-[3px] border-pink-pastel bg-header-bg shadow-[0_4px_16px_rgba(30,34,64,0.06)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="font-heading text-xl font-semibold text-ink">
-          Mentes <span className="text-coral">Curiosas</span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/mentes-curiosas-logo.png"
+            alt="Mentes Curiosas"
+            width={511}
+            height={155}
+            priority
+            className="h-9 w-auto"
+          />
         </Link>
 
         <nav className="hidden flex-1 items-center justify-center gap-1 text-sm font-medium text-ink/80 md:flex">

@@ -1,0 +1,77 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
+// Carrusel de la portada: pensado para publicitar productos con fotos reales
+// (se cargan más adelante); por ahora cada slide muestra un fondo pastel de
+// marca a modo de placeholder. Slide 0 lleva el CTA principal al catálogo.
+const SLIDES = [
+  { bg: "bg-lavender-pastel" },
+  { bg: "bg-pink-pastel", caption: "Nuevos ingresos de la semana" },
+  { bg: "bg-mint-pastel", caption: "Elegidos con mirada de psicopedagoga" },
+];
+
+export function HeroCarousel() {
+  const [active, setActive] = useState(0);
+  const n = SLIDES.length;
+  const go = (i: number) => setActive(((i % n) + n) % n);
+
+  return (
+    <div className="relative h-[300px] overflow-hidden rounded-[32px] sm:h-[420px]">
+      {SLIDES.map((slide, i) => (
+        <div
+          key={i}
+          className={`absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center transition-opacity duration-300 ${slide.bg} ${
+            i === active ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        >
+          {i === 0 ? (
+            <Link
+              href="/productos"
+              className="rounded-full bg-coral px-8 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-coral/90"
+            >
+              Ver catálogo
+            </Link>
+          ) : (
+            <>
+              <div className="flex h-[140px] w-[220px] items-center justify-center rounded-3xl bg-white text-sm font-semibold text-ink/30 sm:h-[220px] sm:w-[300px]">
+                Foto de producto
+              </div>
+              <p className="font-heading text-lg font-bold text-ink sm:text-2xl">{slide.caption}</p>
+            </>
+          )}
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={() => go(active - 1)}
+        aria-label="Diapositiva anterior"
+        className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-lg font-bold text-ink shadow-md"
+      >
+        ‹
+      </button>
+      <button
+        type="button"
+        onClick={() => go(active + 1)}
+        aria-label="Diapositiva siguiente"
+        className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-lg font-bold text-ink shadow-md"
+      >
+        ›
+      </button>
+
+      <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2.5">
+        {SLIDES.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => go(i)}
+            aria-label={`Ir a la diapositiva ${i + 1}`}
+            className={`h-[11px] w-[11px] rounded-full ${i === active ? "bg-coral" : "bg-ink/20"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

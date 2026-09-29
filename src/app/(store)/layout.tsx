@@ -1,6 +1,6 @@
 import { getStoreCategories } from "@/lib/store-data";
 import { getWhatsappNumber } from "@/lib/settings";
-import { fredoka, nunito, playpenSans } from "@/lib/store-fonts";
+import { caveat, fredoka, nunito, playpenSans } from "@/lib/store-fonts";
 import { CartProvider } from "@/components/store/cart-context";
 import { StoreHeader } from "@/components/store/header";
 import { StoreFooter } from "@/components/store/footer";
@@ -21,7 +21,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
 
   return (
     <div
-      className={`${fredoka.variable} ${nunito.variable} ${playpenSans.variable} min-h-screen bg-cream font-body text-ink`}
+      className={`${fredoka.variable} ${nunito.variable} ${playpenSans.variable} ${caveat.variable} min-h-screen bg-cream font-body text-ink`}
     >
       <CartProvider>
         <StoreHeader categories={categories} />

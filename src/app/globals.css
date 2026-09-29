@@ -40,10 +40,16 @@ body {
   --color-lavender-pastel: #e3e0fa;
   --color-sky-pastel: #d4ecf7;
 
+  /* Tono propio para el header anclado: distinto del fondo crema general
+     para que se identifique como una barra fija, con un borde inferior en
+     rosa pastel (--color-pink-pastel). */
+  --color-header-bg: #fff7f2;
+
   /* Ligadas a las variables de next/font que arma src/lib/store-fonts.ts;
      fuera del layout de la tienda esas variables no existen y caen al
      genérico. */
   --font-heading: var(--font-fredoka), sans-serif;
   --font-body: var(--font-nunito), sans-serif;
   --font-accent: var(--font-playpen), cursive;
+  --font-script: var(--font-caveat), cursive;
 }

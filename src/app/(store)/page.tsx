@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getFeaturedProducts, getStoreCategories } from "@/lib/store-data";
 import { ProductCard } from "@/components/store/product-card";
+import { HeroCarousel } from "@/components/store/hero-carousel";
 
 const PASTELS = ["bg-pink-pastel", "bg-yellow-pastel", "bg-mint-pastel", "bg-lavender-pastel", "bg-sky-pastel"];
 
@@ -9,24 +10,14 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-16 pb-16">
-      <section className="px-4 pt-14 pb-16 text-center sm:pt-20">
-        <div className="mx-auto max-w-2xl">
-          <p className="font-accent text-lg text-iris">Un mundo de</p>
-          <h1 className="font-heading text-5xl font-bold leading-tight text-coral sm:text-6xl">
-            jugar
-          </h1>
-          <p className="font-accent text-lg text-petrol">en un solo lugar</p>
-          <p className="mx-auto mt-6 max-w-xl text-base text-ink/70">
-            Juegos educativos, didácticos y libros para acompañar a cada chico desde los primeros
-            meses. Elegidos con mirada de psicopedagoga.
-          </p>
-          <Link
-            href="/productos"
-            className="mt-8 inline-block rounded-full bg-coral px-8 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-coral/90"
-          >
-            Ver catálogo
-          </Link>
-        </div>
+      <section className="px-4 pt-8">
+        <HeroCarousel />
+      </section>
+
+      <section className="px-4 text-center">
+        <p className="mx-auto max-w-2xl font-script text-2xl font-semibold leading-snug text-coral sm:text-3xl">
+          jugar es la forma satisfactoria de nuestro cerebro para aprender...
+        </p>
       </section>
 
       {categories.length > 0 && (
