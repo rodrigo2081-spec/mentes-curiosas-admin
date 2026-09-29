@@ -22,3 +22,28 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Paleta e íconos de marca (brief de estilo Mentes Curiosas), solo para la
+   tienda online — el admin sigue usando la paleta neutral de Tailwind. */
+@theme {
+  --color-coral: #ff6b6b;
+  --color-petrol: #009c91;
+  --color-mustard: #fdbf55;
+  --color-mint: #1de285;
+  --color-iris: #5b5fc1;
+  --color-ink: #1e2240;
+  --color-cream: #fdf8f1;
+
+  --color-pink-pastel: #ffd6d6;
+  --color-yellow-pastel: #fff0c2;
+  --color-mint-pastel: #cff5e3;
+  --color-lavender-pastel: #e3e0fa;
+  --color-sky-pastel: #d4ecf7;
+
+  /* Ligadas a las variables de next/font que arma src/lib/store-fonts.ts;
+     fuera del layout de la tienda esas variables no existen y caen al
+     genérico. */
+  --font-heading: var(--font-fredoka), sans-serif;
+  --font-body: var(--font-nunito), sans-serif;
+  --font-accent: var(--font-playpen), cursive;
+}

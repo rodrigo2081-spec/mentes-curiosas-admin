@@ -7,10 +7,12 @@ import {
   createWithdrawal,
   createTransfer,
   updateDollarRate,
+  updateWhatsappNumber,
   type ExpenseFormState,
   type WithdrawalFormState,
   type TransferFormState,
   type DollarRateFormState,
+  type WhatsappNumberFormState,
 } from "./actions";
 
 const cashBoxOptions = Object.entries(CASH_BOX_LABELS) as [keyof typeof CASH_BOX_LABELS, string][];
@@ -58,6 +60,43 @@ export function DollarRateForm({ currentRate }: { currentRate: number }) {
       </button>
       <p className="w-full text-xs text-neutral-500">
         Se usa para convertir a pesos el costo de los productos cargados en dólares.
+      </p>
+    </form>
+  );
+}
+
+export function WhatsappNumberForm({ currentNumber }: { currentNumber: string }) {
+  const [state, formAction, pending] = useActionState<WhatsappNumberFormState, FormData>(
+    updateWhatsappNumber,
+    {}
+  );
+
+  return (
+    <form action={formAction} className="flex flex-wrap items-end gap-3">
+      <div>
+        <label htmlFor="whatsappNumber" className="block text-xs text-neutral-500">
+          Número con código de país (ej: 549 353 4123456)
+        </label>
+        <input
+          id="whatsappNumber"
+          name="whatsappNumber"
+          type="text"
+          defaultValue={currentNumber}
+          placeholder="549 353 4123456"
+          required
+          className="mt-1 w-56 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+        />
+      </div>
+      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+      >
+        {pending ? "Guardando…" : "Actualizar número"}
+      </button>
+      <p className="w-full text-xs text-neutral-500">
+        A este número llegan los pedidos que arman los clientes desde el carrito de la tienda online.
       </p>
     </form>
   );

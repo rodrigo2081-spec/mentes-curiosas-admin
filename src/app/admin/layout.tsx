@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { SignOutButton } from "./sign-out-button";
+
+export const metadata: Metadata = {
+  title: "Mentes Curiosas · Administración",
+  description: "Panel de administración de stock y productos de Mentes Curiosas",
+};
 
 const navItems = [
   { href: "/admin", label: "Panel" },
@@ -32,6 +38,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              target="_blank"
+              className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100"
+            >
+              Ver tienda ↗
+            </Link>
             <span className="text-sm text-neutral-500">{session?.user?.email}</span>
             <SignOutButton />
           </div>

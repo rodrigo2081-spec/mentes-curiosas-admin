@@ -9,6 +9,7 @@ import { settings } from "@/db/schema";
 const DOLLAR_RATE_KEY = "dollar_rate";
 const DEFAULT_DOLLAR_RATE = 1550;
 const PRODUCT_CODE_SEQ_KEY = "product_code_seq";
+const WHATSAPP_NUMBER_KEY = "whatsapp_number";
 
 export async function getDollarRate(): Promise<number> {
   const row = await db.query.settings.findFirst({ where: eq(settings.key, DOLLAR_RATE_KEY) });
@@ -45,4 +46,23 @@ export async function getNextProductCode(): Promise<string> {
   const seq = row ? parseInt(row.value, 10) : 1;
   const safeSeq = Number.isFinite(seq) && seq > 0 ? seq : 1;
   return safeSeq.toString().padStart(4, "0");
+}
+
+// Número de WhatsApp del negocio (solo dígitos, con código de país, ej:
+// "5493534123456"), usado por el botón de checkout de la tienda online.
+// Se edita desde Administración, no hace falta redeployar para cambiarlo.
+export async function getWhatsappNumber(): Promise<string> {
+  const row = await db.query.settings.findFirst({ where: eq(settings.key, WHATSAPP_NUMBER_KEY) });
+  return row?.value.trim() ?? "";
+}
+
+export async function setWhatsappNumber(number: string): Promise<void> {
+  const digits = number.replace(/[^0-9]/g, "");
+  await db
+    .insert(settings)
+    .values({ key: WHATSAPP_NUMBER_KEY, value: digits })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: { value: digits, updatedAt: new Date() },
+    });
 }

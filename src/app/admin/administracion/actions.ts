@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { expenses, profitWithdrawals, cashTransfers } from "@/db/schema";
 import { auth } from "@/auth";
-import { setDollarRate } from "@/lib/settings";
+import { setDollarRate, setWhatsappNumber } from "@/lib/settings";
 
 async function requireAdmin() {
   const session = await auth();
@@ -43,6 +43,33 @@ export async function updateDollarRate(
   }
   await setDollarRate(parsed.data.dollarRate);
   revalidateAll();
+  return {};
+}
+
+// ----- WhatsApp de la tienda -----
+
+const whatsappNumberSchema = z.object({
+  whatsappNumber: z
+    .string()
+    .trim()
+    .min(8, "Ingresá el número completo, con código de país")
+    .regex(/^[0-9+\s-]+$/, "Usá solo números (podés incluir +, espacios o guiones)"),
+});
+
+export type WhatsappNumberFormState = { error?: string };
+
+export async function updateWhatsappNumber(
+  _prevState: WhatsappNumberFormState,
+  formData: FormData
+): Promise<WhatsappNumberFormState> {
+  await requireAdmin();
+  const parsed = whatsappNumberSchema.safeParse({ whatsappNumber: formData.get("whatsappNumber") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+  await setWhatsappNumber(parsed.data.whatsappNumber);
+  revalidatePath("/admin/administracion");
+  revalidatePath("/", "layout");
   return {};
 }
 

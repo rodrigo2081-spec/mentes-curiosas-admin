@@ -38,6 +38,9 @@ const productSchema = z.object({
   stock: z.coerce.number().int().min(0, "El stock no puede ser negativo"),
   categoryId: z.string().uuid().optional().or(z.literal("")),
   isActive: z.coerce.boolean().optional().default(true),
+  // Para la ficha de producto de la tienda online. Opcionales.
+  ageRange: z.string().trim().optional().default(""),
+  learningSkills: z.string().trim().optional().default(""),
 });
 
 export type ProductFormState = {
@@ -141,6 +144,8 @@ export async function createProduct(
     stock: formData.get("stock"),
     categoryId: formData.get("categoryId"),
     isActive: formData.get("isActive") === "on",
+    ageRange: formData.get("ageRange"),
+    learningSkills: formData.get("learningSkills"),
   });
 
   if (!parsed.success) {
@@ -181,6 +186,8 @@ export async function createProduct(
       stock: parsed.data.stock,
       categoryId,
       isActive: parsed.data.isActive ?? true,
+      ageRange: parsed.data.ageRange || null,
+      learningSkills: parsed.data.learningSkills || null,
     })
     .returning({ id: products.id });
 
@@ -219,6 +226,8 @@ export async function updateProduct(
     stock: formData.get("stock"),
     categoryId: formData.get("categoryId"),
     isActive: formData.get("isActive") === "on",
+    ageRange: formData.get("ageRange"),
+    learningSkills: formData.get("learningSkills"),
   });
 
   if (!parsed.success) {
@@ -267,6 +276,8 @@ export async function updateProduct(
       stock: parsed.data.stock,
       categoryId,
       isActive: parsed.data.isActive ?? true,
+      ageRange: parsed.data.ageRange || null,
+      learningSkills: parsed.data.learningSkills || null,
       updatedAt: new Date(),
     })
     .where(eq(products.id, id));

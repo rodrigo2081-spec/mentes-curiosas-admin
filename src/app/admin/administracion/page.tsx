@@ -2,15 +2,21 @@ import { db } from "@/db";
 import { formatPrice } from "@/lib/utils";
 import { CASH_BOX_LABELS } from "@/lib/pricing";
 import { computeCashBoxBalances } from "@/lib/cashbox-balances";
-import { getDollarRate } from "@/lib/settings";
+import { getDollarRate, getWhatsappNumber } from "@/lib/settings";
 import { deleteExpense, deleteWithdrawal, deleteTransfer } from "./actions";
-import { ExpenseForm, WithdrawalForm, TransferForm, DollarRateForm } from "./forms";
+import {
+  ExpenseForm,
+  WithdrawalForm,
+  TransferForm,
+  DollarRateForm,
+  WhatsappNumberForm,
+} from "./forms";
 import { DeleteButton } from "../productos/delete-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdministracionPage() {
-  const [balances, recentExpenses, recentWithdrawals, recentTransfers, dollarRate] =
+  const [balances, recentExpenses, recentWithdrawals, recentTransfers, dollarRate, whatsappNumber] =
     await Promise.all([
       computeCashBoxBalances(),
       db.query.expenses.findMany({ orderBy: (e, { desc }) => [desc(e.date)], limit: 15 }),
@@ -20,6 +26,7 @@ export default async function AdministracionPage() {
       }),
       db.query.cashTransfers.findMany({ orderBy: (t, { desc }) => [desc(t.date)], limit: 15 }),
       getDollarRate(),
+      getWhatsappNumber(),
     ]);
 
   return (
@@ -36,6 +43,18 @@ export default async function AdministracionPage() {
             Cotización actual: <span className="font-medium text-neutral-900">{formatPrice(dollarRate)}</span> por USD
           </p>
           <DollarRateForm currentRate={dollarRate} />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">WhatsApp de la tienda</h2>
+        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <p className="mb-3 text-sm text-neutral-600">
+            {whatsappNumber
+              ? "Los pedidos del carrito online se mandan a este número."
+              : "Todavía no configuraste el número: el botón de la tienda no va a funcionar hasta que lo cargues."}
+          </p>
+          <WhatsappNumberForm currentNumber={whatsappNumber} />
         </div>
       </section>
 

@@ -51,6 +51,8 @@ export default async function EditarProductoPage(
           categoryId: product.categoryId,
           isActive: product.isActive,
           media: product.media.map((m) => ({ type: m.type, url: m.url })),
+          ageRange: product.ageRange,
+          learningSkills: product.learningSkills,
         }}
       />
     </div>

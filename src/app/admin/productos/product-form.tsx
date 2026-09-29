@@ -30,6 +30,8 @@ export type ProductFormValues = {
   categoryId: string | null;
   isActive: boolean;
   media: MediaItem[];
+  ageRange: string | null;
+  learningSkills: string | null;
 };
 
 export function ProductForm({
@@ -116,6 +118,38 @@ export function ProductForm({
           defaultValue={initialValues?.description}
           className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
         />
+      </div>
+
+      <div className="rounded-lg border border-neutral-200 p-4">
+        <p className="mb-3 text-sm font-medium text-neutral-700">
+          Ficha para la tienda online <span className="font-normal text-neutral-400">(opcional)</span>
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="ageRange" className="block text-xs text-neutral-500">
+              Edad recomendada
+            </label>
+            <input
+              id="ageRange"
+              name="ageRange"
+              placeholder="Ej: +18 meses"
+              defaultValue={initialValues?.ageRange ?? ""}
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="learningSkills" className="block text-xs text-neutral-500">
+              Qué aprende (habilidades que desarrolla)
+            </label>
+            <input
+              id="learningSkills"
+              name="learningSkills"
+              placeholder="Ej: motricidad fina, colores, causa y efecto"
+              defaultValue={initialValues?.learningSkills ?? ""}
+              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="rounded-lg border border-neutral-200 p-4">
