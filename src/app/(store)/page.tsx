@@ -10,8 +10,7 @@ import {
   DoodleStarOutline,
 } from "@/components/store/doodles";
 import { Highlight } from "@/components/store/highlight";
-
-const PASTELS = ["bg-pink-pastel", "bg-yellow-pastel", "bg-mint-pastel", "bg-lavender-pastel", "bg-sky-pastel"];
+import { PASTELS } from "@/lib/brand";
 
 export default async function HomePage() {
   const [featured, categories] = await Promise.all([getFeaturedProducts(8), getStoreCategories()]);
