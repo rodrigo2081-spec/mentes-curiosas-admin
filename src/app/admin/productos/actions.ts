@@ -9,7 +9,7 @@ import { products, productMedia, categories } from "@/db/schema";
 import { auth } from "@/auth";
 import { slugify } from "@/lib/utils";
 import { getDollarRate, getNextProductCode } from "@/lib/settings";
-import { totalCost } from "@/lib/pricing";
+import { totalCost, roundToHundred } from "@/lib/pricing";
 
 const mediaSchema = z.array(
   z.object({
@@ -95,7 +95,7 @@ async function resolvePriceList(
   }
 
   const cost = totalCost({ ...costFields, costCurrency: "ars" }, dollarRate);
-  return Math.round(cost * 2 * 100) / 100;
+  return roundToHundred(cost * 2);
 }
 
 async function codeInUse(code: string, ignoreId?: string) {

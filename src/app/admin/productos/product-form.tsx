@@ -4,11 +4,12 @@ import { useActionState, useState } from "react";
 import { MediaUploader, type MediaItem } from "@/components/media-uploader";
 import { formatPrice } from "@/lib/utils";
 import {
-  CASH_DISCOUNT_RATE,
   CURRENCY_LABELS,
   baseCostArs,
   commissionAmountArs,
   merchCostArs,
+  priceCash as computePriceCash,
+  roundToHundred,
   totalCost as computeTotalCost,
   type Currency,
 } from "@/lib/pricing";
@@ -68,9 +69,9 @@ export function ProductForm({
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const isManualPrice = selectedCategory?.manualPriceList ?? false;
-  const autoPriceList = Math.round(totalCost * 2 * 100) / 100;
+  const autoPriceList = roundToHundred(totalCost * 2);
   const effectivePriceList = isManualPrice ? parseFloat(priceList) || 0 : autoPriceList;
-  const priceCash = effectivePriceList * (1 - CASH_DISCOUNT_RATE);
+  const priceCash = computePriceCash(effectivePriceList);
 
   return (
     <form action={formAction} className="max-w-2xl space-y-6">

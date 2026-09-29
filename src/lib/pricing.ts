@@ -6,6 +6,13 @@ export function toNumber(value: string | number | null | undefined): number {
   return Number.isFinite(num) ? num : 0;
 }
 
+// Redondeo a la centena más cercana (ej: 13.560 -> 13.600, 28.706 -> 28.700).
+// Se aplica a todo precio calculado (precio de lista automático, precio de
+// contado) para que los precios de venta siempre terminen en "00".
+export function roundToHundred(value: number): number {
+  return Math.round(value / 100) * 100;
+}
+
 export type Currency = "ars" | "usd";
 
 export const CURRENCY_LABELS: Record<Currency, string> = {
@@ -50,7 +57,7 @@ export function totalCost(product: ProductCostFields, dollarRate: number): numbe
 }
 
 export function priceCash(priceList: string | number): number {
-  return toNumber(priceList) * (1 - CASH_DISCOUNT_RATE);
+  return roundToHundred(toNumber(priceList) * (1 - CASH_DISCOUNT_RATE));
 }
 
 export const PAYMENT_METHODS = [
