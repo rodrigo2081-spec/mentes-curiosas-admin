@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { expenses, profitWithdrawals, cashTransfers } from "@/db/schema";
 import { auth } from "@/auth";
-import { setDollarRate, setWhatsappNumber } from "@/lib/settings";
+import { setDollarRate, setWhatsappNumber, setInstagramUsername } from "@/lib/settings";
 
 async function requireAdmin() {
   const session = await auth();
@@ -68,6 +68,31 @@ export async function updateWhatsappNumber(
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
   await setWhatsappNumber(parsed.data.whatsappNumber);
+  revalidatePath("/admin/administracion");
+  revalidatePath("/", "layout");
+  return {};
+}
+
+// ----- Instagram de la tienda -----
+
+const instagramUsernameSchema = z.object({
+  instagramUsername: z.string().trim().min(1, "Ingresá el usuario de Instagram"),
+});
+
+export type InstagramUsernameFormState = { error?: string };
+
+export async function updateInstagramUsername(
+  _prevState: InstagramUsernameFormState,
+  formData: FormData
+): Promise<InstagramUsernameFormState> {
+  await requireAdmin();
+  const parsed = instagramUsernameSchema.safeParse({
+    instagramUsername: formData.get("instagramUsername"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+  await setInstagramUsername(parsed.data.instagramUsername);
   revalidatePath("/admin/administracion");
   revalidatePath("/", "layout");
   return {};

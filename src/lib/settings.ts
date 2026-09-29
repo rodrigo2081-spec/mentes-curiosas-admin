@@ -10,6 +10,7 @@ const DOLLAR_RATE_KEY = "dollar_rate";
 const DEFAULT_DOLLAR_RATE = 1550;
 const PRODUCT_CODE_SEQ_KEY = "product_code_seq";
 const WHATSAPP_NUMBER_KEY = "whatsapp_number";
+const INSTAGRAM_URL_KEY = "instagram_url";
 
 export async function getDollarRate(): Promise<number> {
   const row = await db.query.settings.findFirst({ where: eq(settings.key, DOLLAR_RATE_KEY) });
@@ -64,5 +65,30 @@ export async function setWhatsappNumber(number: string): Promise<void> {
     .onConflictDoUpdate({
       target: settings.key,
       set: { value: digits, updatedAt: new Date() },
+    });
+}
+
+// Usuario de Instagram del negocio (solo el @, sin arroba, ej: "mentescuriosas"),
+// usado por el botón de Instagram del footer de la tienda online. Se edita
+// desde Administración, no hace falta redeployar para cambiarlo.
+export async function getInstagramUsername(): Promise<string> {
+  const row = await db.query.settings.findFirst({ where: eq(settings.key, INSTAGRAM_URL_KEY) });
+  return row?.value.trim() ?? "";
+}
+
+export async function setInstagramUsername(username: string): Promise<void> {
+  // Acepta que peguen el @, la URL completa o solo el usuario; nos quedamos
+  // solo con el usuario.
+  const clean = username
+    .trim()
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .replace(/\/.*$/, "");
+  await db
+    .insert(settings)
+    .values({ key: INSTAGRAM_URL_KEY, value: clean })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: { value: clean, updatedAt: new Date() },
     });
 }

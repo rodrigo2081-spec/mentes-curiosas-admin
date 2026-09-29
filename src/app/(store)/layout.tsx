@@ -1,5 +1,5 @@
 import { getStoreCategories } from "@/lib/store-data";
-import { getWhatsappNumber } from "@/lib/settings";
+import { getWhatsappNumber, getInstagramUsername } from "@/lib/settings";
 import { caveat, fredoka, nunito, playpenSans } from "@/lib/store-fonts";
 import { CartProvider } from "@/components/store/cart-context";
 import { StoreHeader } from "@/components/store/header";
@@ -14,9 +14,10 @@ export const metadata = {
 };
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const [categories, whatsappNumber] = await Promise.all([
+  const [categories, whatsappNumber, instagramUsername] = await Promise.all([
     getStoreCategories(),
     getWhatsappNumber(),
+    getInstagramUsername(),
   ]);
 
   return (
@@ -26,7 +27,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <CartProvider>
         <StoreHeader categories={categories} />
         <main>{children}</main>
-        <StoreFooter whatsappNumber={whatsappNumber} />
+        <StoreFooter whatsappNumber={whatsappNumber} instagramUsername={instagramUsername} />
       </CartProvider>
     </div>
   );

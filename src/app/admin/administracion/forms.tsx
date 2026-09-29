@@ -8,11 +8,13 @@ import {
   createTransfer,
   updateDollarRate,
   updateWhatsappNumber,
+  updateInstagramUsername,
   type ExpenseFormState,
   type WithdrawalFormState,
   type TransferFormState,
   type DollarRateFormState,
   type WhatsappNumberFormState,
+  type InstagramUsernameFormState,
 } from "./actions";
 
 const cashBoxOptions = Object.entries(CASH_BOX_LABELS) as [keyof typeof CASH_BOX_LABELS, string][];
@@ -97,6 +99,43 @@ export function WhatsappNumberForm({ currentNumber }: { currentNumber: string })
       </button>
       <p className="w-full text-xs text-neutral-500">
         A este número llegan los pedidos que arman los clientes desde el carrito de la tienda online.
+      </p>
+    </form>
+  );
+}
+
+export function InstagramUsernameForm({ currentUsername }: { currentUsername: string }) {
+  const [state, formAction, pending] = useActionState<InstagramUsernameFormState, FormData>(
+    updateInstagramUsername,
+    {}
+  );
+
+  return (
+    <form action={formAction} className="flex flex-wrap items-end gap-3">
+      <div>
+        <label htmlFor="instagramUsername" className="block text-xs text-neutral-500">
+          Usuario de Instagram (sin @)
+        </label>
+        <input
+          id="instagramUsername"
+          name="instagramUsername"
+          type="text"
+          defaultValue={currentUsername}
+          placeholder="mentescuriosas"
+          required
+          className="mt-1 w-56 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+        />
+      </div>
+      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+      >
+        {pending ? "Guardando…" : "Actualizar usuario"}
+      </button>
+      <p className="w-full text-xs text-neutral-500">
+        Se usa para el botón de Instagram en el pie de la tienda online.
       </p>
     </form>
   );

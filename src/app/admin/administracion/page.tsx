@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { formatPrice } from "@/lib/utils";
 import { CASH_BOX_LABELS } from "@/lib/pricing";
 import { computeCashBoxBalances } from "@/lib/cashbox-balances";
-import { getDollarRate, getWhatsappNumber } from "@/lib/settings";
+import { getDollarRate, getWhatsappNumber, getInstagramUsername } from "@/lib/settings";
 import { deleteExpense, deleteWithdrawal, deleteTransfer } from "./actions";
 import {
   ExpenseForm,
@@ -10,24 +10,33 @@ import {
   TransferForm,
   DollarRateForm,
   WhatsappNumberForm,
+  InstagramUsernameForm,
 } from "./forms";
 import { DeleteButton } from "../productos/delete-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdministracionPage() {
-  const [balances, recentExpenses, recentWithdrawals, recentTransfers, dollarRate, whatsappNumber] =
-    await Promise.all([
-      computeCashBoxBalances(),
-      db.query.expenses.findMany({ orderBy: (e, { desc }) => [desc(e.date)], limit: 15 }),
-      db.query.profitWithdrawals.findMany({
-        orderBy: (w, { desc }) => [desc(w.date)],
-        limit: 15,
-      }),
-      db.query.cashTransfers.findMany({ orderBy: (t, { desc }) => [desc(t.date)], limit: 15 }),
-      getDollarRate(),
-      getWhatsappNumber(),
-    ]);
+  const [
+    balances,
+    recentExpenses,
+    recentWithdrawals,
+    recentTransfers,
+    dollarRate,
+    whatsappNumber,
+    instagramUsername,
+  ] = await Promise.all([
+    computeCashBoxBalances(),
+    db.query.expenses.findMany({ orderBy: (e, { desc }) => [desc(e.date)], limit: 15 }),
+    db.query.profitWithdrawals.findMany({
+      orderBy: (w, { desc }) => [desc(w.date)],
+      limit: 15,
+    }),
+    db.query.cashTransfers.findMany({ orderBy: (t, { desc }) => [desc(t.date)], limit: 15 }),
+    getDollarRate(),
+    getWhatsappNumber(),
+    getInstagramUsername(),
+  ]);
 
   return (
     <div className="space-y-10">
@@ -55,6 +64,18 @@ export default async function AdministracionPage() {
               : "Todavía no configuraste el número: el botón de la tienda no va a funcionar hasta que lo cargues."}
           </p>
           <WhatsappNumberForm currentNumber={whatsappNumber} />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Instagram de la tienda</h2>
+        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <p className="mb-3 text-sm text-neutral-600">
+            {instagramUsername
+              ? "Este usuario se usa en el botón de Instagram del pie de la tienda online."
+              : "Todavía no configuraste el usuario: el botón de Instagram no se muestra hasta que lo cargues."}
+          </p>
+          <InstagramUsernameForm currentUsername={instagramUsername} />
         </div>
       </section>
 
